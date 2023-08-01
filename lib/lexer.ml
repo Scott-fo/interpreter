@@ -17,19 +17,19 @@ let read_char lexer =
 let next_token lexer =
   Option.value_map lexer.ch ~default:(lexer, None) ~f:(fun ch ->
       let open Token in
-      let lexer, token =
+      let token =
         match ch with
-        | '=' -> (read_char lexer, ASSIGN)
-        | '+' -> (read_char lexer, PLUS)
-        | ',' -> (read_char lexer, COMMA)
-        | ';' -> (read_char lexer, SEMICOLON)
-        | '(' -> (read_char lexer, LPAREN)
-        | ')' -> (read_char lexer, RPAREN)
-        | '{' -> (read_char lexer, LBRACE)
-        | '}' -> (read_char lexer, RBRACE)
+        | '=' -> ASSIGN
+        | '+' -> PLUS
+        | ',' -> COMMA
+        | ';' -> SEMICOLON
+        | '(' -> LPAREN
+        | ')' -> RPAREN
+        | '{' -> LBRACE
+        | '}' -> RBRACE
         | _ -> failwith "Not yet implemented"
       in
-      (lexer, Some token))
+      (read_char lexer, Some token))
 
 module Test = struct
   let%test_unit "next token, simple" =
@@ -46,13 +46,13 @@ module Test = struct
         Token.SEMICOLON;
       ]
     in
-    let initial_lexer = init input in
+    let lexer = init input in
     let _ =
-      List.fold ~init:initial_lexer
+      List.fold ~init:lexer
         ~f:(fun lexer expected ->
-          let lexer, output = next_token lexer in
+          let lexer', output = next_token lexer in
           assert (Poly.equal output (Some expected));
-          lexer)
+          lexer')
         expected_output
     in
     ()
