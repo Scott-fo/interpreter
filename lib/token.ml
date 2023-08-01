@@ -1,8 +1,8 @@
 type t =
   | ILLEGAL
   | EOF
-  | IDENT
-  | INT
+  | IDENT of string
+  | INT of string
   | ASSIGN
   | PLUS
   | COMMA
@@ -13,3 +13,6 @@ type t =
   | RBRACE
   | FUNCTION
   | LET
+[@@deriving show, eq]
+
+let lookup_ident = function "fn" -> FUNCTION | "let" -> LET | str -> IDENT str
