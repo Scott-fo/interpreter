@@ -43,8 +43,9 @@ let rec next_token lexer =
       (lexer, Some token))
 
 and read_char lexer =
-  if lexer.position >= String.length lexer.input - 1 then
-    { lexer with ch = None }
+  let length = String.length lexer.input in
+  if lexer.position >= length - 1 then
+    { lexer with position = length; ch = None }
   else
     let position = lexer.position + 1 in
     let ch = Some (String.get lexer.input position) in
@@ -112,6 +113,81 @@ module Test = struct
             | None -> failwith "Unexpected end of tokens"
           in
           assert (Token.equal output' expected);
+          lexer')
+        expected_output
+    in
+    ()
+
+  let%test_unit "next token, simple let" =
+    let input = "let" in
+    let expected_output = [ Token.LET ] in
+    let lexer = init input in
+    let _ =
+      List.fold ~init:lexer
+        ~f:(fun lexer expected ->
+          let lexer', output = next_token lexer in
+          let output' =
+            match output with
+            | Some token -> token
+            | None -> failwith "Unexpected end of tokens"
+          in
+          let error_message =
+            Printf.sprintf "Expected: %s, Got: %s" (Token.show expected)
+              (Token.show output')
+          in
+          assert (
+            if not (Token.equal output' expected) then failwith error_message
+            else true);
+          lexer')
+        expected_output
+    in
+    ()
+
+  let%test_unit "next token, simple let with semicolon" =
+    let input = "let;" in
+    let expected_output = [ Token.LET; Token.SEMICOLON ] in
+    let lexer = init input in
+    let _ =
+      List.fold ~init:lexer
+        ~f:(fun lexer expected ->
+          let lexer', output = next_token lexer in
+          let output' =
+            match output with
+            | Some token -> token
+            | None -> failwith "Unexpected end of tokens"
+          in
+          let error_message =
+            Printf.sprintf "Expected: %s, Got: %s" (Token.show expected)
+              (Token.show output')
+          in
+          assert (
+            if not (Token.equal output' expected) then failwith error_message
+            else true);
+          lexer')
+        expected_output
+    in
+    ()
+
+  let%test_unit "next token, 22" =
+    let input = "22" in
+    let expected_output = [ Token.INT "22" ] in
+    let lexer = init input in
+    let _ =
+      List.fold ~init:lexer
+        ~f:(fun lexer expected ->
+          let lexer', output = next_token lexer in
+          let output' =
+            match output with
+            | Some token -> token
+            | None -> failwith "Unexpected end of tokens"
+          in
+          let error_message =
+            Printf.sprintf "Expected: %s, Got: %s" (Token.show expected)
+              (Token.show output')
+          in
+          assert (
+            if not (Token.equal output' expected) then failwith error_message
+            else true);
           lexer')
         expected_output
     in
