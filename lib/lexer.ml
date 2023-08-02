@@ -19,10 +19,10 @@ let rec next_token lexer =
   Option.value_map lexer.ch ~default:(lexer, None) ~f:(fun ch ->
       let lexer, token =
         match ch with
-        | '=' -> (read_char lexer, ASSIGN)
+        | '=' -> check_peeked lexer '=' ~eq:EQ ~ineq:ASSIGN
+        | '!' -> check_peeked lexer '=' ~eq:NOT_EQ ~ineq:BANG
         | '+' -> (read_char lexer, PLUS)
         | '-' -> (read_char lexer, MINUS)
-        | '!' -> (read_char lexer, BANG)
         | '*' -> (read_char lexer, ASTERISK)
         | '/' -> (read_char lexer, SLASH)
         | '<' -> (read_char lexer, LT)
@@ -74,6 +74,18 @@ and skip_whitespace lexer =
   let lexer, _ = walk lexer ~rule:is_whitespace in
   lexer
 
+and peek_char lexer =
+  if lexer.position >= String.length lexer.input - 1 then None
+  else Some (String.get lexer.input (lexer.position + 1))
+
+and check_peeked lexer ch ~eq ~ineq =
+  let lexer', token =
+    match peek_char lexer with
+    | Some peeked when Char.equal ch peeked -> (read_char lexer, eq)
+    | _ -> (lexer, ineq)
+  in
+  (read_char lexer', token)
+
 module Test = struct
   let%test_unit "next token, simple" =
     let input = "=+(){},;" in
@@ -118,6 +130,15 @@ module Test = struct
         let result = add(five, ten);
         !-/*5
         5 < 10 > 5
+
+        if (5 < 10) {
+            return true;
+        } else {
+            return false;
+        }
+
+        10 == 10;
+        10 != 9;
         |}
     in
     let expected_output =
@@ -168,6 +189,31 @@ module Test = struct
         Token.INT "10";
         Token.GT;
         Token.INT "5";
+        Token.IF;
+        Token.LPAREN;
+        Token.INT "5";
+        Token.LT;
+        Token.INT "10";
+        Token.RPAREN;
+        Token.LBRACE;
+        Token.RETURN;
+        Token.TRUE;
+        Token.SEMICOLON;
+        Token.RBRACE;
+        Token.ELSE;
+        Token.LBRACE;
+        Token.RETURN;
+        Token.FALSE;
+        Token.SEMICOLON;
+        Token.RBRACE;
+        Token.INT "10";
+        Token.EQ;
+        Token.INT "10";
+        Token.SEMICOLON;
+        Token.INT "10";
+        Token.NOT_EQ;
+        Token.INT "9";
+        Token.SEMICOLON;
       ]
     in
     let lexer = init input in
