@@ -1,9 +1,5 @@
-module Node : sig
-  type t = PROGRAM | STATEMENT | EXPRESSION
-end
-
 module Identifier : sig
-  type t = { value : string }
+  type t = { identifier : string }
 
   val show : t -> string
   val equal : t -> t -> bool
@@ -17,7 +13,7 @@ module Expression : sig
 end
 
 module Statement : sig
-  type t = LET of { identifier : Identifier.t; value : Expression.t }
+  type t = LET of { name : Identifier.t; value : Expression.t }
 
   val show : t -> string
   val equal : t -> t -> bool
@@ -28,4 +24,11 @@ module Program : sig
 
   val show : t -> string
   val equal : t -> t -> bool
+end
+
+module Node : sig
+  type t =
+    | PROGRAM of Program.t
+    | STATEMENT of Statement.t
+    | EXPRESSION of Expression.t
 end
